@@ -68,6 +68,3 @@ export default tseslint.config([
 ])
 ```
 # camping-rental
-# camping-rental
-# camping-rental
-# camping-rental
