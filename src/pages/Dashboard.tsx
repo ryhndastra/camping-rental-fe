@@ -50,6 +50,8 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  //state buat logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: '',
     lastName: '',
@@ -192,23 +194,15 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    // Clear all authentication data
+
+  const handleConfirmLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-
-    // Clear any other stored data if needed
     localStorage.clear();
-
-    // Dispatch custom event to notify App component of auth change
     window.dispatchEvent(new Event('authChange'));
-
-    // Reset component state
     setUser(null);
     setIsLoading(false);
     setActiveMenu('Dashboard');
-
-    // Navigate to login page
     navigate('/', { replace: true });
   };
 
@@ -763,7 +757,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="flex items-center space-x-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
@@ -773,7 +767,60 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* LogOut Modal */}
 
+
+        {showLogoutModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
+              onClick={() => setShowLogoutModal(false)} // klik luar buat close
+            />
+
+            {/* Modal box */}
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scaleIn">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-8V5m0 8H3"
+                  />
+                </svg>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Konfirmasi Logout
+                </h2>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                Apakah Anda yakin ingin keluar dari akun ini?
+              </p>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmLogout}
+                  className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Dashboard Content */}
         {renderContent()}
       </div>
