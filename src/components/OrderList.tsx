@@ -162,11 +162,23 @@ const OrderList: React.FC = () => {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.equipmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      order.equipmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  //Order state
+  const ordersPerPage = 10;
+
+  //Hitung data dari Pagination
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  //Hitung Jumlah Halman
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
@@ -324,11 +336,11 @@ const OrderList: React.FC = () => {
       const sortedOrders = [...filteredOrders].sort((a, b) => {
         const statusIndexA = statusOrder.indexOf(a.status);
         const statusIndexB = statusOrder.indexOf(b.status);
-        
+
         if (statusIndexA !== statusIndexB) {
           return statusIndexA - statusIndexB;
         }
-        
+
         // If same status, sort by order date (newest first)
         return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();
       });
@@ -362,7 +374,7 @@ const OrderList: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       alert(`Data berhasil diekspor! ${sortedOrders.length} orders telah didownload.`);
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -464,7 +476,7 @@ const OrderList: React.FC = () => {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
                 />
               </div>
-              
+
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
@@ -480,8 +492,8 @@ const OrderList: React.FC = () => {
                 </select>
               </div>
             </div>
-            
-            <button 
+
+            <button
               onClick={handleExportData}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
@@ -538,7 +550,7 @@ const OrderList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.length === 0 ? (
+                {currentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="text-gray-500">
@@ -549,7 +561,7 @@ const OrderList: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order) => (
+                  currentOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{order.id}</div>
@@ -608,26 +620,43 @@ const OrderList: React.FC = () => {
           </div>
         )}
 
+
         {/* Pagination */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
-              Showing {filteredOrders.length} of {orders.length} orders
+              Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders
             </div>
             <div className="flex items-center space-x-2">
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              {/* Prev */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <button className="w-8 h-8 rounded-lg text-sm font-medium bg-blue-600 text-white">
-                1
-              </button>
-              <button className="w-8 h-8 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
-                2
-              </button>
-              <button className="w-8 h-8 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
-                3
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+
+              {/* Numbered pages */}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              {/* Next */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -648,7 +677,7 @@ const OrderList: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-gray-600">Order ID</label>
@@ -713,7 +742,7 @@ const OrderList: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name*</label>
@@ -725,7 +754,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer Email*</label>
                 <input
@@ -736,7 +765,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Equipment Name*</label>
                 <input
@@ -747,7 +776,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
                 <input
@@ -759,7 +788,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date*</label>
                 <input
@@ -770,7 +799,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">End Date*</label>
                 <input
@@ -781,7 +810,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Price (IDR)*</label>
                 <input
@@ -793,7 +822,7 @@ const OrderList: React.FC = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
                 <select
